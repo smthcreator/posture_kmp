@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.ui.Modifier
 import ui.screens.OnboardingScreen
 import ui.screens.ChecklistScreen
+import ui.screens.QualityCheckScreen
 
 @Composable
 fun App() {
@@ -14,7 +15,11 @@ fun App() {
 
             when (screen) {
                 "onboarding" -> OnboardingScreen(onContinue = { screen = "checklist" })
-                "checklist" -> ChecklistScreen(onStartCapture = { screen = "capture" })
+                "checklist" -> ChecklistScreen(onStartCapture = { screen = "qc" })
+                "qc" -> QualityCheckScreen(
+                    onProceed = { screen = "capture" },
+                    onBack = { screen = "checklist" }
+                )
                 "capture" -> androidx.compose.material3.Text("Экран съёмки (заглушка)")
             }
         }
