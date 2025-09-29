@@ -7,6 +7,8 @@ import ui.screens.OnboardingScreen
 import ui.screens.ChecklistScreen
 import ui.screens.QualityCheckScreen
 import ui.screens.CaptureScreen
+import ui.screens.ResultsScreen
+import ui.screens.HistoryScreen
 
 @Composable
 fun App() {
@@ -25,7 +27,13 @@ fun App() {
                     onFinish = { screen = "results" },
                     onCancel = { screen = "checklist" }
                 )
-                "results" -> androidx.compose.material3.Text("Экран результатов (заглушка)")
+                "results" -> ResultsScreen(
+                    onDone = { screen = "onboarding" },
+                    onOpenHistory = { screen = "history" }
+                )
+                "history" -> HistoryScreen(
+                    onBack = { screen = "results" }
+                )
             }
         }
     }
