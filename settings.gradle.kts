@@ -1,6 +1,6 @@
 rootProject.name = "MyApplication"
 
-include(":androidApp")
+include(":PostureKMPAndroid")
 include(":shared")
 
 pluginManagement {
