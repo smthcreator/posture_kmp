@@ -6,6 +6,7 @@ import androidx.compose.ui.Modifier
 import ui.screens.OnboardingScreen
 import ui.screens.ChecklistScreen
 import ui.screens.QualityCheckScreen
+import ui.screens.CaptureScreen
 
 @Composable
 fun App() {
@@ -20,7 +21,11 @@ fun App() {
                     onProceed = { screen = "capture" },
                     onBack = { screen = "checklist" }
                 )
-                "capture" -> androidx.compose.material3.Text("Экран съёмки (заглушка)")
+                "capture" -> CaptureScreen(
+                    onFinish = { screen = "results" },
+                    onCancel = { screen = "checklist" }
+                )
+                "results" -> androidx.compose.material3.Text("Экран результатов (заглушка)")
             }
         }
     }
