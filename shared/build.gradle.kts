@@ -2,6 +2,7 @@ plugins {
     kotlin("multiplatform")
     id("com.android.library")
     id("org.jetbrains.compose")
+    id("org.jetbrains.kotlin.native.cocoapods")
 }
 
 kotlin {
@@ -10,6 +11,20 @@ kotlin {
     iosX64()
     iosArm64()
     iosSimulatorArm64()
+        
+    cocoapods {
+        // Данные для Podspec
+        summary = "Shared code for PostureKMP"
+        homepage = "https://example.com/posturekmp"
+        ios.deploymentTarget = "15.0"
+        version = "0.1.0"
+
+        // Фреймворк для Xcode/Pods
+        framework {
+            baseName = "shared"
+            isStatic = true
+        }
+    }
 
     sourceSets {
         val commonMain by getting {
