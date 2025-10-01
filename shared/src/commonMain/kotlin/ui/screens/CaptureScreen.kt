@@ -8,6 +8,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import camera.CameraController
 import camera.PreviewState
+import camera.PlatformCameraPreview
 import kotlinx.coroutines.launch
 
 @Composable
@@ -17,13 +18,12 @@ fun CaptureScreen(
 ) {
     val scope = rememberCoroutineScope()
     val controller = remember { CameraController() }
-    val state by remember { mutableStateOf(controller) }
     var previewState by remember { mutableStateOf<PreviewState>(PreviewState.Idle) }
     var lastCapture by remember { mutableStateOf<String?>(null) }
 
-    // Наблюдаем за состоянием превью (Flow → state)
-    LaunchedEffect(state) {
-        state.previewState.collect { previewState = it }
+    // Подписка на состояние превью
+    LaunchedEffect(controller) {
+        controller.previewState.collect { previewState = it }
     }
 
     Surface(color = MaterialTheme.colorScheme.background) {
@@ -32,7 +32,16 @@ fun CaptureScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text("Съёмка (мок превью)", style = MaterialTheme.typography.headlineSmall)
+            Text("Съёмка", style = MaterialTheme.typography.headlineSmall)
+
+            // Область реального превью (Android: CameraX; iOS: заглушка пока)
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f)
+            ) {
+                PlatformCameraPreview(controller = controller)
+            }
 
             AssistChip(
                 onClick = {},
@@ -41,8 +50,8 @@ fun CaptureScreen(
                         when (previewState) {
                             is PreviewState.Idle -> "Idle"
                             is PreviewState.Starting -> "Starting…"
-                            is PreviewState.Running -> "Running ${(previewState as PreviewState.Running).fps ?: 0} fps"
-                            is PreviewState.Error -> "Error: ${(previewState as PreviewState.Error).message}"
+                            is PreviewState.Running -> "Running"
+                            is PreviewState.Error -> "Error"
                         }
                     )
                 },
@@ -61,25 +70,22 @@ fun CaptureScreen(
                     onClick = {
                         scope.launch {
                             if (previewState is PreviewState.Running) {
-                                state.stopPreview()
+                                controller.stopPreview()
                             } else {
-                                val ok = state.ensurePermissions()
-                                if (ok) state.startPreview(backCamera = true)
+                                val ok = controller.ensurePermissions()
+                                if (ok) controller.startPreview(backCamera = true)
                             }
                         }
                     },
                     modifier = Modifier.weight(1f).height(52.dp)
                 ) {
-                    Text(
-                        if (previewState is PreviewState.Running) "Стоп превью"
-                        else "Старт превью"
-                    )
+                    Text(if (previewState is PreviewState.Running) "Стоп превью" else "Старт превью")
                 }
 
                 Button(
                     onClick = {
                         scope.launch {
-                            val info = state.captureBestFrame()
+                            val info = controller.captureBestFrame()
                             lastCapture = "${info.width}x${info.height} @ ${info.timestampMs}"
                         }
                     },
@@ -91,8 +97,6 @@ fun CaptureScreen(
             if (lastCapture != null) {
                 Text("Последний кадр: $lastCapture")
             }
-
-            Spacer(Modifier.weight(1f))
 
             Button(
                 onClick = onFinish,

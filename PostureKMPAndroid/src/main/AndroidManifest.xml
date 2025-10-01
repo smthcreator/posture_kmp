@@ -1,13 +1,18 @@
 <manifest package="ai.posture.android" xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Разрешение на использование камеры -->
+    <uses-permission android:name="android.permission.CAMERA" />
+    <!-- Декларация наличия любой камеры (для CameraX селектора) -->
+    <uses-feature android:name="android.hardware.camera.any" android:required="false" />
+
     <application
-    android:label="PostureKMP">
-    <activity
-        android:name=".MainActivity"
-        android:exported="true">
-        <intent-filter>
-            <action android:name="android.intent.action.MAIN" />
-            <category android:name="android.intent.category.LAUNCHER" />
-        </intent-filter>
-    </activity>
-</application>
+        android:label="PostureKMP">
+        <activity
+            android:name=".MainActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+    </application>
 </manifest>
