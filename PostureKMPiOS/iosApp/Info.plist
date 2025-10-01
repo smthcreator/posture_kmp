@@ -46,5 +46,7 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<key>NSCameraUsageDescription</key>
+		<string>Камера нужна для съёмки осанки (фронт/профиль/спина) и расчёта метрик на устройстве.</string>
 </dict>
 </plist>

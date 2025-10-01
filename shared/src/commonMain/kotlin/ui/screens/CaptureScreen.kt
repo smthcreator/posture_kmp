@@ -5,6 +5,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import camera.CameraController
 import camera.PreviewState
@@ -26,82 +27,139 @@ fun CaptureScreen(
         controller.previewState.collect { previewState = it }
     }
 
-    Surface(color = MaterialTheme.colorScheme.background) {
-        Column(
-            modifier = Modifier.fillMaxSize().padding(20.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Text("Съёмка", style = MaterialTheme.typography.headlineSmall)
+    // Полноэкранный слой камеры + полупрозрачные оверлеи управления
+    Box(modifier = Modifier.fillMaxSize()) {
 
-            // Область реального превью (Android: CameraX; iOS: заглушка пока)
-            Box(
+        // 1) Камера на весь экран
+        PlatformCameraPreview(controller = controller)
+
+        // 2) Верхняя панель (тонкий оверлей)
+        Surface(
+            color = Color.Black.copy(alpha = 0.25f),
+            contentColor = Color.White,
+            tonalElevation = 0.dp,
+            modifier = Modifier
+                .fillMaxWidth()
+                .align(Alignment.TopCenter)
+        ) {
+            Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .weight(1f)
+                    .padding(top = 16.dp, bottom = 8.dp, start = 16.dp, end = 16.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                PlatformCameraPreview(controller = controller)
-            }
-
-            AssistChip(
-                onClick = {},
-                label = {
-                    Text(
-                        when (previewState) {
-                            is PreviewState.Idle -> "Idle"
-                            is PreviewState.Starting -> "Starting…"
-                            is PreviewState.Running -> "Running"
-                            is PreviewState.Error -> "Error"
-                        }
-                    )
-                },
-            )
-
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                OutlinedButton(
-                    onClick = onCancel,
-                    modifier = Modifier.weight(1f).height(52.dp)
-                ) { Text("Назад") }
-
-                Button(
-                    onClick = {
-                        scope.launch {
-                            if (previewState is PreviewState.Running) {
-                                controller.stopPreview()
-                            } else {
-                                val ok = controller.ensurePermissions()
-                                if (ok) controller.startPreview(backCamera = true)
+                Text(
+                    "Съёмка",
+                    style = MaterialTheme.typography.titleMedium
+                )
+                AssistChip(
+                    onClick = {},
+                    label = {
+                        Text(
+                            when (previewState) {
+                                is PreviewState.Idle -> "Idle"
+                                is PreviewState.Starting -> "Starting…"
+                                is PreviewState.Running -> "Running"
+                                is PreviewState.Error -> "Error"
                             }
-                        }
+                        )
                     },
-                    modifier = Modifier.weight(1f).height(52.dp)
-                ) {
-                    Text(if (previewState is PreviewState.Running) "Стоп превью" else "Старт превью")
+                    colors = AssistChipDefaults.assistChipColors(
+                        containerColor = Color.Black.copy(alpha = 0.35f),
+                        labelColor = Color.White
+                    )
+                )
+            }
+        }
+
+        // 3) Нижняя панель управления (как в Камере)
+        Surface(
+            color = Color.Black.copy(alpha = 0.35f),
+            contentColor = Color.White,
+            tonalElevation = 0.dp,
+            modifier = Modifier
+                .fillMaxWidth()
+                .align(Alignment.BottomCenter)
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                // Лента статуса последнего кадра (необязательно)
+                if (lastCapture != null) {
+                    Text(
+                        "Кадр: $lastCapture",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Color.White.copy(alpha = 0.9f)
+                    )
                 }
 
+                // Ряд кнопок «Назад» — «Пуск/Стоп» — «Снимок»
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    OutlinedButton(
+    onClick = onCancel,
+    modifier = Modifier.weight(1f).height(48.dp),
+    colors = ButtonDefaults.outlinedButtonColors(
+        contentColor = Color.White
+    )
+) { Text("Назад") }
+
+                    // Центральная «спусковая»/плей кнопка
+                    Button(
+                        onClick = {
+                            scope.launch {
+                                if (previewState is PreviewState.Running) {
+                                    controller.stopPreview()
+                                } else {
+                                    val ok = controller.ensurePermissions()
+                                    if (ok) controller.startPreview(backCamera = true)
+                                }
+                            }
+                        },
+                        modifier = Modifier.weight(1.4f).height(56.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color.White,
+                            contentColor = Color.Black
+                        ),
+                        shape = MaterialTheme.shapes.large
+                    ) {
+                        Text(if (previewState is PreviewState.Running) "Стоп" else "Пуск")
+                    }
+
+                    Button(
+                        onClick = {
+                            scope.launch {
+                                val info = controller.captureBestFrame()
+                                lastCapture = "${info.width}x${info.height} @ ${info.timestampMs}"
+                            }
+                        },
+                        enabled = previewState is PreviewState.Running,
+                        modifier = Modifier.weight(1f).height(48.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color.White.copy(alpha = 0.9f),
+                            contentColor = Color.Black
+                        )
+                    ) { Text("Снимок") }
+                }
+
+                // Кнопка «Готово» на всю ширину
                 Button(
-                    onClick = {
-                        scope.launch {
-                            val info = controller.captureBestFrame()
-                            lastCapture = "${info.width}x${info.height} @ ${info.timestampMs}"
-                        }
-                    },
-                    enabled = previewState is PreviewState.Running,
-                    modifier = Modifier.weight(1f).height(52.dp)
-                ) { Text("Снимок") }
+                    onClick = onFinish,
+                    modifier = Modifier.fillMaxWidth().height(48.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color.White.copy(alpha = 0.95f),
+                        contentColor = Color.Black
+                    )
+                ) { Text("Готово") }
             }
-
-            if (lastCapture != null) {
-                Text("Последний кадр: $lastCapture")
-            }
-
-            Button(
-                onClick = onFinish,
-                modifier = Modifier.fillMaxWidth().height(52.dp)
-            ) { Text("Готово") }
         }
     }
 }
