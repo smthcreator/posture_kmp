@@ -24,6 +24,7 @@ kotlin {
             baseName = "shared"
             isStatic = true
         }
+        pod("MediapipeTasksVision")
     }
 
     sourceSets {
@@ -45,6 +46,7 @@ kotlin {
                 implementation("androidx.camera:camera-lifecycle:1.3.4")
                 implementation("androidx.camera:camera-view:1.3.4")
                 implementation("androidx.lifecycle:lifecycle-runtime-compose:2.8.4")
+                implementation("com.google.mediapipe:tasks-vision:0.10.14")
             }
         }
         val iosMain by creating {
