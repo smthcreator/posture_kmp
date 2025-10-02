@@ -4,5 +4,6 @@ import androidx.compose.runtime.Composable
 
 @Composable
 expect fun PlatformCameraPreview(
-    controller: CameraController
+    controller: CameraController,
+    onAndroidPreviewReady: ((Any) -> Unit)? = null
 )

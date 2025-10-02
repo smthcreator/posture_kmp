@@ -12,18 +12,24 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 
 @Composable
-actual fun PlatformCameraPreview(controller: CameraController) {
+actual fun PlatformCameraPreview(
+    controller: CameraController,
+    onAndroidPreviewReady: ((Any) -> Unit)?
+) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
 
     // Хост для CameraX
     AndroidView(
         factory = { ctx: Context ->
-            PreviewView(ctx).apply {
-                // SCALE_TYPE_FILL_CENTER — без чёрных полос, обрезка по краям
-                scaleType = PreviewView.ScaleType.FILL_CENTER
-            }
-        },
+    val previewView = PreviewView(ctx).apply {
+        // SCALE_TYPE_FILL_CENTER — без чёрных полос, обрезка по краям
+        scaleType = PreviewView.ScaleType.FILL_CENTER
+    }
+    // Передаём наружу PreviewView (как Any)
+    onAndroidPreviewReady?.invoke(previewView)
+    previewView
+},
         update = { previewView ->
             val cameraProviderFuture = ProcessCameraProvider.getInstance(context)
             cameraProviderFuture.addListener({

@@ -1,16 +1,27 @@
 PODS:
+  - MediaPipeTasksCommon (0.10.21)
+  - MediaPipeTasksVision (0.10.21):
+    - MediaPipeTasksCommon (= 0.10.21)
   - shared (0.1.0)
 
 DEPENDENCIES:
+  - MediaPipeTasksVision
   - shared (from `../shared`)
+
+SPEC REPOS:
+  trunk:
+    - MediaPipeTasksCommon
+    - MediaPipeTasksVision
 
 EXTERNAL SOURCES:
   shared:
     :path: "../shared"
 
 SPEC CHECKSUMS:
-  shared: 60f59568972f144d2bbcdc5f2f244392705e9ca3
+  MediaPipeTasksCommon: 6cfa29170d4900f04d250ad95ec058f14a741f38
+  MediaPipeTasksVision: 7b1c0f5a5820e87e9d96926f5e65d8cd3744fac2
+  shared: 6dd3ad19e5c729083c2cb4adfdd4cf52afc45050
 
-PODFILE CHECKSUM: 706f51783d81dd1eefc9c3534e51edcec3779eed
+PODFILE CHECKSUM: 3b764d45b14a1da3d62a1fb4f65822bf32e86591
 
 COCOAPODS: 1.16.2

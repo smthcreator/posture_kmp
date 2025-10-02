@@ -1,8 +1,9 @@
 plugins {
     kotlin("multiplatform")
-    id("com.android.library")
+    id("org.jetbrains.kotlin.plugin.compose")
     id("org.jetbrains.compose")
     id("org.jetbrains.kotlin.native.cocoapods")
+    id("com.android.library")
 }
 
 kotlin {
@@ -16,7 +17,8 @@ kotlin {
         // Данные для Podspec
         summary = "Shared code for PostureKMP"
         homepage = "https://example.com/posturekmp"
-        ios.deploymentTarget = "15.0"
+        ios.deploymentTarget = "15.5"
+        podfile = project.file("../PostureKMPiOS/Podfile")
         version = "0.1.0"
 
         // Фреймворк для Xcode/Pods
@@ -24,7 +26,8 @@ kotlin {
             baseName = "shared"
             isStatic = true
         }
-        pod("MediapipeTasksVision")
+        
+        // pod("MediaPipeTasksVision") // перенесли в iosApp (Swift), чтобы избежать cinterop
     }
 
     sourceSets {
@@ -55,6 +58,10 @@ kotlin {
         val iosX64Main by getting { dependsOn(iosMain) }
         val iosArm64Main by getting { dependsOn(iosMain) }
         val iosSimulatorArm64Main by getting { dependsOn(iosMain) }
+    }
+        // Opt-in для некоторых экспериментальных API Compose MPP
+    sourceSets.all {
+        languageSettings.optIn("org.jetbrains.compose.ExperimentalComposeLibrary")
     }
 }
 

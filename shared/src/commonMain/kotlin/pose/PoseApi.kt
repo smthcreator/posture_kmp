@@ -36,6 +36,8 @@ expect class PoseEstimator(
 ) {
     /** Выполнить оценку позы по текущему кадру превью/фото (в Sprint 2 – заглушка) */
     suspend fun estimateOnce(): PoseResult?
+    /** Оценить позу по переданному изображению (Android: ожидает android.graphics.Bitmap) */
+    suspend fun estimateBitmap(image: Any): PoseResult?
 
     /** Освобождение ресурсов MediaPipe */
     fun close()

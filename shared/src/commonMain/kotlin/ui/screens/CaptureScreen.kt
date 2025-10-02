@@ -11,6 +11,8 @@ import camera.CameraController
 import camera.PreviewState
 import camera.PlatformCameraPreview
 import kotlinx.coroutines.launch
+import pose.PoseEstimator
+import pose.PoseResult
 
 @Composable
 fun CaptureScreen(
@@ -19,6 +21,9 @@ fun CaptureScreen(
 ) {
     val scope = rememberCoroutineScope()
     val controller = remember { CameraController() }
+    var estimator by remember { mutableStateOf<PoseEstimator?>(null) }
+    DisposableEffect(Unit) { onDispose { estimator?.close() } }
+    var previewViewRef by remember { mutableStateOf<Any?>(null) }
     var previewState by remember { mutableStateOf<PreviewState>(PreviewState.Idle) }
     var lastCapture by remember { mutableStateOf<String?>(null) }
 
@@ -30,10 +35,26 @@ fun CaptureScreen(
     // Полноэкранный слой камеры + полупрозрачные оверлеи управления
     Box(modifier = Modifier.fillMaxSize()) {
 
-        // 1) Камера на весь экран
-        PlatformCameraPreview(controller = controller)
+        // Камера на весь экран
+        PlatformCameraPreview(
+    controller = controller,
+    onAndroidPreviewReady = { pvAny ->
+        previewViewRef = pvAny
 
-        // 2) Верхняя панель (тонкий оверлей)
+        // Инициализируем PoseEstimator ТОЛЬКО на Android (на iOS контекст отсутствует)
+        if (estimator == null) {
+            val ctx = camera.androidExtractContext(pvAny)
+            if (ctx != null) {
+                estimator = PoseEstimator(
+                    platformContext = ctx,
+                    modelPath = "pose_landmarker_full.task" // актуальная full-модель
+                )
+            }
+        }
+    }
+)
+
+        // Верхняя панель (тонкий оверлей)
         Surface(
             color = Color.Black.copy(alpha = 0.25f),
             contentColor = Color.White,
@@ -73,7 +94,7 @@ fun CaptureScreen(
             }
         }
 
-        // 3) Нижняя панель управления (как в Камере)
+        // Нижняя панель управления (как в Камере)
         Surface(
             color = Color.Black.copy(alpha = 0.35f),
             contentColor = Color.White,
@@ -135,19 +156,36 @@ fun CaptureScreen(
                     }
 
                     Button(
-                        onClick = {
-                            scope.launch {
-                                val info = controller.captureBestFrame()
-                                lastCapture = "${info.width}x${info.height} @ ${info.timestampMs}"
-                            }
-                        },
-                        enabled = previewState is PreviewState.Running,
-                        modifier = Modifier.weight(1f).height(48.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color.White.copy(alpha = 0.9f),
-                            contentColor = Color.Black
-                        )
-                    ) { Text("Снимок") }
+    onClick = {
+        scope.launch {
+            val est = estimator
+if (est == null) {
+    lastCapture = "PoseEstimator не инициализирован (ожидаем Android Preview)"
+    return@launch
+}
+
+val bmpAny = camera.androidCaptureBitmap(previewViewRef)
+if (bmpAny == null) {
+    lastCapture = "Кадр ещё не готов (или не Android)"
+    return@launch
+}
+
+// Инференс позы (MediaPipe, Android)
+val pose: PoseResult? = est.estimateBitmap(bmpAny)
+            if (pose == null) {
+                lastCapture = "Позы не найдено"
+            } else {
+                lastCapture = "Keypoints: ${pose.keypoints.size} @ ${pose.timestampMs}"
+            }
+        }
+    },
+    enabled = previewState is PreviewState.Running,
+    modifier = Modifier.weight(1f).height(48.dp),
+    colors = ButtonDefaults.buttonColors(
+        containerColor = Color.White.copy(alpha = 0.9f),
+        contentColor = Color.Black
+    )
+) { Text("Снимок") }
                 }
 
                 // Кнопка «Готово» на всю ширину
