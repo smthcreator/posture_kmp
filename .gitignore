@@ -1,12 +1,30 @@
-*.iml
-.gradle
-/local.properties
-/.idea
+# macOS
 .DS_Store
+
+# JetBrains / Android Studio
+.idea/
+*.iml
+
+# Gradle
+.gradle/
 build/
-/captures
-.externalNativeBuild
-.cxx
-iosApp/iosApp.xcworkspace/*
-iosApp/iosApp.xcodeproj/*
-!iosApp/iosApp.xcodeproj/project.pbxproj
+**/build/
+
+# Android
+local.properties
+.cxx/
+captures/
+
+# Xcode / iOS
+PostureKMPiOS/Pods/
+PostureKMPiOS/iosApp.xcworkspace/
+**/*.xcworkspace/
+**/*.xcuserdatad/
+**/*.xcuserstate
+DerivedData/
+
+# Kotlin/Native
+.konan/
+
+# Logs & misc
+*.log
